@@ -1,4 +1,4 @@
-# nf-core/msconvert: Changelog
+# lehtiolab/nf-msconvert: Changelog
 
-## v1.0dev - [date]
-Initial release of nf-core/msconvert, created with the [nf-core](http://nf-co.re/) template.
+## v1.0 - [200407]
+Initial release of lehtiolab/nf-msconvert, based on with the [nf-core](http://nf-co.re/) template.
