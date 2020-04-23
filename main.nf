@@ -71,6 +71,7 @@ params.raws = false
 Channel.fromPath(params.raws).set { raws }
 filters = params.filters.tokenize(';').collect() { x -> "--filter ${x}" }.join(' ')
 options = params.options.tokenize(';').collect() {x -> "--${x}"}.join(' ')
+msconv_cpus = '--combineIonMobilitySpectra' in options ? 4 : 2
 
 // Header log info
 def summary = [:]
@@ -90,14 +91,13 @@ if (workflow.profile == 'awsbatch') {
   summary['AWS Queue']      = params.awsqueue
 }
 summary['Config Profile'] = workflow.profile
-if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
-if (params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
-if (params.config_profile_url)         summary['Config URL']         = params.config_profile_url
 
 
 process msconvert {
   container params.container
   publishDir "${params.outdir}"
+
+  cpus = msconv_cpus
 
   input:
   file(x) from raws
