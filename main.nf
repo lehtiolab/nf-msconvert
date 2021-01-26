@@ -68,7 +68,7 @@ params.options = ''
 params.filters = ''
 params.raws = false
 
-Channel.fromPath(params.raws).set { raws }
+Channel.fromPath(params.raws, type: 'any').set { raws }
 filters = params.filters.tokenize(';').collect() { x -> "--filter ${x}" }.join(' ')
 options = params.options.tokenize(';').collect() {x -> "--${x}"}.join(' ')
 msconv_cpus = '--combineIonMobilitySpectra' in options ? 4 : 2
