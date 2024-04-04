@@ -19,7 +19,6 @@ def helpMessage() {
     nextflow run lehtiolab/nf-msconvert --raws '/path/to/*.raw' -profile docker
 
     Mandatory arguments:
-      --reads                       Path to input data (must be surrounded with quotes)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: conda, docker, singularity, awsbatch, test and more.
 
@@ -28,13 +27,9 @@ def helpMessage() {
                                         --filters '"peakPicking true 2";"precursorRefine"'
       --options                     Options passed to msconvert, in quotes with semicolons,  e.g. 
                                         --options 'optionOne 2;optionTwo', will be passed as --optionOne 2 --optionTwo
-      --genome                      Name of iGenomes reference
-      --singleEnd                   Specifies that the input is single end reads
 
     Other options:
       --outdir                      The output directory where the results will be saved
-      --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
-      --email_on_fail               Same as --email, except only send mail if the workflow is not successful
       -name                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
 
     AWSBatch options:
