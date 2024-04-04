@@ -64,7 +64,8 @@ if ( workflow.profile == 'awsbatch') {
   if (workflow.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
 }
 
-params.options = ''
+nextflow.enable.dsl = 1
+param.options = ''
 params.filters = ''
 params.raws = false
 
