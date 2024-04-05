@@ -60,7 +60,7 @@ if ( workflow.profile == 'awsbatch') {
 }
 
 nextflow.enable.dsl = 1
-param.options = ''
+params.options = ''
 params.filters = ''
 params.raws = false
 
