@@ -16,7 +16,9 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run lehtiolab/nf-msconvert --raws '/path/to/*.raw' -profile docker
+    nextflow run lehtiolab/nf-msconvert --raws '/path/to/*.raw' -profile docker --filters "'peakPicking true 2'"
+	OR e.g.
+    nextflow run lehtiolab/nf-msconvert --raws '/path/to/1.raw;/path/to/2.raw' -profile docker --filters "'peakPicking true 2';'precursorRefine'"
 
     Mandatory arguments:
       -profile                      Configuration profile to use. Can use multiple (comma separated)
@@ -64,7 +66,7 @@ params.options = ''
 params.filters = ''
 params.raws = false
 
-Channel.fromPath(params.raws, type: 'any').set { raws }
+Channel.fromPath(params.raws.tokenize(';'), type: 'any').set { raws }
 filters = params.filters.tokenize(';').collect() { x -> "--filter ${x}" }.join(' ')
 options = params.options.tokenize(';').collect() {x -> "--${x}"}.join(' ')
 msconv_cpus = '--combineIonMobilitySpectra' in options ? 4 : 2

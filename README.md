@@ -19,8 +19,9 @@ ii. Install one of [`docker`](https://docs.docker.com/engine/installation/), [`s
 iii. Download the pipeline and run on your raw files to convert. Example:
 
 ```bash
-# Semicolons to separate options, filters, remove -- from the options as they are otherwise passed to nextflow
+# Semicolons to separate raws, options, filters, remove the `--` from the options as they are otherwise passed to nextflow, and use double quoting for options/filters.
 nextflow run lehtiolab/nf-msconvert -profile <docker/singularity> --raws '/path/to/*.raw' --options 'mz5;numpressAll' --filters '"peakPicking true 2";"precursorRefine"'
+nextflow run lehtiolab/nf-msconvert -profile <docker/singularity> --raws '/path/to/1.raw;/path/to/2.raw' --options 'mz5;numpressAll' --filters '"peakPicking true 2";"precursorRefine"'
 ```
 
 See [usage docs](docs/usage.md) for all of the available options when running the pipeline.
