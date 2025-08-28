@@ -93,8 +93,7 @@ summary['Config Profile'] = workflow.profile
 
 process msconvert {
   container params.container
-  publishDir "${params.outdir}"
-
+  publishDir "${params.outdir}", mode: 'copy', overwrite: true
   cpus = msconv_cpus
 
   input:
