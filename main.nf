@@ -11,8 +11,32 @@
 
 
 
+process runThermoFileparser {
+  container 'quay.io/biocontainers/thermorawfileparser:1.4.5--h05cac1d_1'
+  publishDir "${params.outdir}", mode: 'copy', overwrite: true
+  //cpus = '--combineIonMobilitySpectra' in params.options ? 4 : 2
+
+  input:
+  tuple path(x), val(filters), val(options)
+
+  output:
+  path(outfile)
+
+  script:
+  outfile = "${x.baseName}.mzML"
+  
+  """
+  thermorawfileparser -i=${x} -b=${outfile} -f=2 -m=1 -c=metadata -p=1 -L=1- -l=1
+  # Resolve directory if necessary, pwiz tries to read NF soft links as if they are files, which
+  # does not work in case of directory
+  #${x.isDirectory() ?  "mv ${x} tmpdir && cp -rL tmpdir ${x}" : ''}
+  """
+}
+
+
+
 process runMsconvert {
-  container params.container
+  container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
   publishDir "${params.outdir}", mode: 'copy', overwrite: true
   cpus = '--combineIonMobilitySpectra' in params.options ? 4 : 2
 
@@ -72,6 +96,12 @@ workflow {
   Channel.fromPath(params.raws.tokenize(';'), type: 'any').set { raws }
   filters = params.filters.tokenize(';').collect() { x -> "--filter ${x}" }.join(' ')
   options = params.options.tokenize(';').collect() {x -> "--${x}"}.join(' ')
-
-  runMsconvert(raws.map { [it, filters, options] })
+  
+  if (params.mzmltool == 'msconvert') {
+    runMsconvert(raws.map { [it, filters, options] })
+  } else if (params.mzmltool == 'thermorawfileparser') {
+    runThermoFileparser(raws.map { [it, filters, options] })
+  } else {
+   println(params.container)
+}
 }
