@@ -33,8 +33,9 @@ process runThermoFileparser {
 
 
 process runMsconvert {
-  container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.24172-63d00b1'
+  container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.25182-6ca4f8b'
   publishDir "${params.outdir}", mode: 'copy', overwrite: true
+  containerOptions workflow.containerEngine == 'singularity' ? "-S /mywineprefix" : ''
   cpus = '--combineIonMobilitySpectra' in params.options ? 4 : 2
 
   input:
@@ -52,7 +53,7 @@ process runMsconvert {
   # Resolve directory if necessary, pwiz tries to read NF soft links as if they are files, which
   # does not work in case of directory
   ${x.isDirectory() ?  "mv ${x} tmpdir && cp -rL tmpdir ${x}" : ''}
-  wine msconvert ${x} ${centroid} ${filters} ${options}
+  ${winecmd} msconvert ${x} ${centroid} ${filters} ${options}
   """
 }
 
