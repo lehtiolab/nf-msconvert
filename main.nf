@@ -58,6 +58,25 @@ process runMsconvert {
 }
 
 
+process getMd5Sum {
+  // no container, expect md5sum and awk on system
+
+  publishDir "${params.outdir}", mode: 'copy', overwrite: true
+
+  input:
+  path(mzml)
+  
+  output:
+  path(md5fn)
+  
+  script:
+  md5fn = "${mzml.baseName}.md5"
+  """
+  md5sum ${mzml} | awk '{print \$1}' > ${md5fn}
+  """
+}
+
+
 workflow {
 
   // Show help message
@@ -106,6 +125,10 @@ workflow {
     runThermoFileparser(raws.map { [it, pp, filters, options] })
     | set { mzmls }
   } else {
-   println(params.container)
-}
+  exit 1, 'You must select an --mzmltool, it can be one of [msconvert, thermorawfileparser]'
+  }
+
+  if (params.md5out) {
+    getMd5Sum(mzmls)
+  }
 }
