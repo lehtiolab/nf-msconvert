@@ -14,25 +14,22 @@
 process runThermoFileparser {
   container 'quay.io/biocontainers/thermorawfileparser:1.4.5--h05cac1d_1'
   publishDir "${params.outdir}", mode: 'copy', overwrite: true
-  //cpus = '--combineIonMobilitySpectra' in params.options ? 4 : 2
 
   input:
-  tuple path(x), val(filters), val(options)
+  tuple path(x), val(pplevels), val(filters), val(options)
 
   output:
   path(outfile)
 
   script:
   outfile = "${x.baseName}.mzML"
+  disablepplvls = ['1','2','3'].minus(pplevels)
+  disable_peakpick = disablepplvls.size() ? "-p=${disablepplvls.join(',')}" : ''
   
   """
-  thermorawfileparser -i=${x} -b=${outfile} -f=2 -m=1 -c=metadata -p=1 -L=1- -l=1
-  # Resolve directory if necessary, pwiz tries to read NF soft links as if they are files, which
-  # does not work in case of directory
-  #${x.isDirectory() ?  "mv ${x} tmpdir && cp -rL tmpdir ${x}" : ''}
+  thermorawfileparser -i=${x} -b=${outfile} -f=2 ${disable_peakpick} -L=1-
   """
 }
-
 
 
 process runMsconvert {
@@ -41,19 +38,21 @@ process runMsconvert {
   cpus = '--combineIonMobilitySpectra' in params.options ? 4 : 2
 
   input:
-  tuple path(x), val(filters), val(options)
+  tuple path(x), val(pplevels), val(filters), val(options)
 
   output:
   path(outfile)
 
   script:
   outfile = "${x.baseName}.mzML"
+  winecmd = workflow.containerEngine == 'singularity' ? 'mywine' : 'wine'
+  centroid = pplevels ? "--filter 'peakPicking true ${pplevels.join(' ')}'" : ''
   
   """
   # Resolve directory if necessary, pwiz tries to read NF soft links as if they are files, which
   # does not work in case of directory
   ${x.isDirectory() ?  "mv ${x} tmpdir && cp -rL tmpdir ${x}" : ''}
-  wine msconvert ${x} ${filters} ${options}
+  wine msconvert ${x} ${centroid} ${filters} ${options}
   """
 }
 
@@ -97,11 +96,14 @@ workflow {
   Channel.fromPath(params.raws.tokenize(';'), type: 'any').set { raws }
   filters = params.filters.tokenize(';').collect() { x -> "--filter ${x}" }.join(' ')
   options = params.options.tokenize(';').collect() {x -> "--${x}"}.join(' ')
+  pp = params.centroid ? "${params.centroid}".tokenize(',') : false
   
   if (params.mzmltool == 'msconvert') {
-    runMsconvert(raws.map { [it, filters, options] })
+    runMsconvert(raws.map { [it, pp, filters, options] })
+    | set { mzmls }
   } else if (params.mzmltool == 'thermorawfileparser') {
-    runThermoFileparser(raws.map { [it, filters, options] })
+    runThermoFileparser(raws.map { [it, pp, filters, options] })
+    | set { mzmls }
   } else {
    println(params.container)
 }
