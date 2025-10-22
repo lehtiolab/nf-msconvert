@@ -77,18 +77,19 @@ workflow {
                                       Available: conda, docker, singularity, awsbatch, test and more.
   
       Options:
+        --mzmltool                    One of [msconvert (default), thermorawfileparser]
+        --centroid                    Which MS level to centroid, defaults to 2, can be 1-2, 1-, 2-, etc
         --filters                     Filters to msconvert, in quotes, separate by semicolons, e.g.
                                           --filters '"peakPicking true 2";"precursorRefine"'
         --options                     Options passed to msconvert, in quotes with semicolons,  e.g. 
                                           --options 'optionOne 2;optionTwo', will be passed as --optionOne 2 --optionTwo
   
       Other options:
+        --md5out                      When given, also output the md5 of the file in a separate file
+        --reportout                   When given, also output the trace files etc in pipeline_info/
         --outdir                      The output directory where the results will be saved
         -name                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
   
-      AWSBatch options:
-        --awsqueue                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
-        --awsregion                   The AWS Region for your AWS Batch job to run on
       """.stripIndent()
       exit 0
   }
