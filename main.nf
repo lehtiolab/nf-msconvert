@@ -13,7 +13,6 @@
 
 process runThermoFileparser {
   container 'quay.io/biocontainers/thermorawfileparser:1.4.5--h05cac1d_1'
-  publishDir "${params.outdir}", mode: 'copy', overwrite: true
 
   input:
   tuple path(x), val(pplevels), val(filters), val(options)
@@ -34,9 +33,8 @@ process runThermoFileparser {
 
 process runMsconvert {
   container 'proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses:3.0.25182-6ca4f8b'
-  publishDir "${params.outdir}", mode: 'copy', overwrite: true
   containerOptions workflow.containerEngine == 'singularity' ? "-S /mywineprefix" : ''
-  cpus = '--combineIonMobilitySpectra' in params.options ? 4 : 2
+  cpus '--combineIonMobilitySpectra' in params.options ? 4 : 2
 
   input:
   tuple path(x), val(pplevels), val(filters), val(options)
@@ -61,8 +59,6 @@ process runMsconvert {
 process getMd5Sum {
   // no container, expect md5sum and awk on system
 
-  publishDir "${params.outdir}", mode: 'copy', overwrite: true
-
   input:
   path(mzml)
   
@@ -78,7 +74,7 @@ process getMd5Sum {
 
 
 workflow {
-
+  main:
   // Show help message
   if (params.help) {
       log.info"""
@@ -105,8 +101,8 @@ workflow {
   
       Other options:
         --md5out                      When given, also output the md5 of the file in a separate file
-        --reportout                   When given, also output the trace files etc in pipeline_info/
-        --outdir                      The output directory where the results will be saved
+        --reportout                   When given, also output the trace/report/timeline files
+        -output-dir                   The output directory where the results will be saved
         -name                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
   
       """.stripIndent()
@@ -118,17 +114,23 @@ workflow {
   options = params.options.tokenize(';').collect() {x -> "--${x}"}.join(' ')
   pp = params.centroid ? "${params.centroid}".tokenize(',') : false
   
-  if (params.mzmltool == 'msconvert') {
-    runMsconvert(raws.map { [it, pp, filters, options] })
-    | set { mzmls }
-  } else if (params.mzmltool == 'thermorawfileparser') {
-    runThermoFileparser(raws.map { [it, pp, filters, options] })
-    | set { mzmls }
-  } else {
-  exit 1, 'You must select an --mzmltool, it can be one of [msconvert, thermorawfileparser]'
-  }
+  inraws = raws | map { [it, pp, filters, options] }
 
-  if (params.md5out) {
-    getMd5Sum(mzmls)
+  inraws | filter { params.mzmltool == 'msconvert' } | runMsconvert
+  | mix(inraws | filter { params.mzmltool == 'thermorawfileparser' } | runThermoFileparser)
+  | set { mzmls }
+  
+  if (params.mzmltool != 'msconvert' && params.mzmltool != 'thermorawfileparser') {
+    exit 1, 'You must select an --mzmltool, it can be one of [msconvert, thermorawfileparser]'
   }
+  md5s = mzmls | filter { params.md5out } | getMd5Sum
+  
+  publish:
+  mzmls_out = mzmls
+  md5_out = md5s
+}
+
+output {
+  mzmls_out {}
+  md5_out {}
 }
